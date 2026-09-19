@@ -63,3 +63,5 @@ setuptools<85
 # explicitly in pyproject.toml and pin google-auth to the post-drop range so
 # the install path is internally consistent (#40962).
 google-auth>=2.53.0,<3.0.0
+# Keep the xlrd pin pulled in via pandas[excel] within the range declared by the `excel` extra in pyproject.toml
+xlrd>=2.0.2,<2.1
