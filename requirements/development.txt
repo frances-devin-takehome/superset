@@ -1256,7 +1256,7 @@ wtforms-json==0.3.5
     # via
     #   -c requirements/base-constraint.txt
     #   apache-superset
-xlrd==2.0.1
+xlrd==2.0.2
     # via
     #   -c requirements/base-constraint.txt
     #   pandas
