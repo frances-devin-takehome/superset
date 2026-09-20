@@ -18,3 +18,17 @@ This will generate the pinned requirements in the `.txt` files, which will be us
 We recommend to everyone in the community to use the pinned requirements in their local development environments, to ensure consistency across different environments, though we don't force requirements as part of our python package semantics to allow flexibility for users to install different versions of the dependencies if they wish.
 
 Note that `development.txt` is a superset of what's in `base.txt`, and all version numbers for shared library should fully match at all times. `translations.txt` is meant as a supplemental file to be used in conjunction with the other requirements files, and is not meant to be used standalone.
+
+## Fork-local remediation validation
+
+This fork runs `.github/workflows/remediation-validation.yml` as an independent, inexpensive signal for automated remediation pull requests. It is self-contained: gating comes from the workflow's own `paths` filter, not from the shared change-detector, so no CI routing used by other workflows is modified.
+
+The one category covered is Python dependencies (`pyproject.toml`, `requirements/**`, `scripts/uv-pip-compile.sh`): the workflow re-runs `./scripts/uv-pip-compile.sh` and fails if the regenerated `requirements/*.txt` differ from what the PR committed — comment-only and whitespace-only diffs are ignored, mirroring the upstream `check-python-deps` workflow. Reproduce locally with:
+
+```bash
+./scripts/uv-pip-compile.sh && git diff --exit-code requirements
+```
+
+Limitations: nothing from the resolved set is installed, imported, or tested, so runtime breakage from a version bump is not detected; only state that `uv-pip-compile.sh` regenerates is validated, which excludes constraints that never take part in that resolution (notably `[project.optional-dependencies]` extras, which are not compile inputs, so a transitive pin can contradict an extra while the check stays green); there is no vulnerability or license scanning; frontend, Docker, and helm dependencies are out of scope.
+
+To cover another remediation category (for example frontend lock files or Python code quality), add its paths to the workflow's `paths` filter and add a job running the tooling that category already has in-tree, gating the jobs on which paths changed.
