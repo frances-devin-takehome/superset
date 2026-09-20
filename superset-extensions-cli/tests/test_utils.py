@@ -18,8 +18,10 @@
 from __future__ import annotations
 
 import json
+import tomllib
 
 import pytest
+
 from superset_extensions_cli.utils import read_json, read_toml, write_json, write_toml
 
 
@@ -131,7 +133,7 @@ def test_read_toml_with_invalid_toml(isolated_filesystem):
     invalid_toml_file = isolated_filesystem / "invalid.toml"
     invalid_toml_file.write_text("[ invalid toml content")
 
-    with pytest.raises(Exception):  # tomli raises various exceptions for invalid TOML
+    with pytest.raises(tomllib.TOMLDecodeError):
         read_toml(invalid_toml_file)
 
 
@@ -218,7 +220,7 @@ def test_read_toml_with_various_invalid_content(isolated_filesystem, invalid_con
     toml_file = isolated_filesystem / "invalid.toml"
     toml_file.write_text(invalid_content)
 
-    with pytest.raises(Exception):  # Various TOML parsing exceptions
+    with pytest.raises(tomllib.TOMLDecodeError):
         read_toml(toml_file)
 
 

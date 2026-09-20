@@ -22,8 +22,8 @@ import zipfile
 from unittest.mock import patch
 
 import pytest
-from superset_extensions_cli.cli import app
 
+from superset_extensions_cli.cli import app
 from tests.utils import assert_file_exists
 
 

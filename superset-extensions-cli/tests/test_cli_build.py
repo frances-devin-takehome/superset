@@ -22,6 +22,7 @@ from unittest.mock import Mock, patch
 
 import click
 import pytest
+
 from superset_extensions_cli.cli import (
     app,
     build_manifest,
@@ -30,7 +31,6 @@ from superset_extensions_cli.cli import (
     copy_frontend_dist,
     init_frontend_deps,
 )
-
 from tests.utils import (
     assert_directory_exists,
     assert_file_exists,

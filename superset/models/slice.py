@@ -449,7 +449,7 @@ class Slice(  # pylint: disable=too-many-public-methods
         # SCRIPT_NAME (the application_root). `Slice.url` itself stays router-
         # relative so frontend callers can apply ensureAppRoot exactly once.
         href = url_for("ExploreView.root", slice_id=self.id)
-        return Markup(f'<a href="{href}">{name}</a>')
+        return Markup(f'<a href="{href}">{name}</a>')  # noqa: S704
 
     @property
     def icons(self) -> str:
