@@ -1,66 +1,55 @@
 # Fast, fork-local validation signal for automated remediation pull requests.
 #
-# Structure: a `detect` job runs the repository's own change-detector action and
-# publishes one flag per change category; each category job is guarded by its
-# flag and reuses the tooling that category already has in-tree. Adding a
-# category later means adding a pattern group in `scripts/change_detector.py`,
-# an output in `.github/actions/change-detector/action.yml`, and one job here —
-# no change to the categories that already exist.
+# Self-contained by design: gating uses this workflow's own `on.pull_request.paths`
+# filter rather than the shared `scripts/change_detector.py` / change-detector
+# action, so the fork carries no changes to CI routing that every other workflow
+# depends on, and this file can be added or removed on its own.
 #
 # Categories validated:
-#   - python-deps: re-runs `./scripts/uv-pip-compile.sh` (the repository's
+#   - python-deps: re-runs `./scripts/uv-pip-compile.sh` (the repository's own
 #     dependency tooling, containerized on the pinned Python version) and fails
 #     when the regenerated requirements/*.txt differ from what the PR committed,
 #     ignoring comment-only and whitespace-only diffs.
 #
+# To add a category later (for example frontend lock files or Python code
+# quality): add its paths to the `paths:` list below, add a job that runs the
+# tooling that category already has in-tree, and gate the jobs on which paths
+# changed — e.g. a `changes` job using `dorny/paths-filter` whose outputs each
+# job keys off with `if:`. Existing categories stay untouched.
+#
 # Limitations:
-#   - Nothing is installed, imported, or executed from the resolved dependency
-#     set, so runtime breakage from a version bump is not detected. The upstream
-#     test suites remain the only signal for that.
-#   - Dependency validation only covers state that `uv-pip-compile.sh`
-#     regenerates. Constraints that never take part in that resolution — most
-#     notably `[project.optional-dependencies]` extras, which are not compile
-#     inputs — are not checked, so a transitive pin can contradict an extra
-#     while this workflow stays green.
+#   - Nothing from the resolved dependency set is installed, imported, or
+#     executed, so runtime breakage from a version bump is not detected. The
+#     upstream test suites remain the only signal for that.
+#   - Only state that `uv-pip-compile.sh` regenerates is validated. Constraints
+#     that never take part in that resolution — notably
+#     `[project.optional-dependencies]` extras, which are not compile inputs —
+#     are not checked, so a transitive pin can contradict an extra while this
+#     workflow stays green.
 #   - No vulnerability, license, frontend, Docker, or helm validation.
-#   - Resolution output is sensitive to the Python version and platform; the
-#     recompile runs in the same image contributor tooling uses, and changes to
-#     that image can shift results.
+#   - Resolution output depends on the Python version and platform; the
+#     recompile runs in the image contributor tooling uses, and changes to that
+#     image can shift results.
 name: Remediation validation
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "pyproject.toml"
+      - "requirements/**"
+      - "scripts/uv-pip-compile.sh"
+      - ".github/workflows/remediation-validation.yml"
 
 permissions:
   contents: read
-  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  detect:
-    runs-on: ubuntu-26.04
-    outputs:
-      python-deps: ${{ steps.check.outputs.python-deps }}
-    steps:
-      - name: "Checkout ${{ github.ref }} ( ${{ github.sha }} )"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 1
-
-      - name: Check for file changes
-        id: check
-        uses: ./.github/actions/change-detector/
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
   python-deps:
-    needs: detect
-    if: needs.detect.outputs.python-deps == 'true'
     runs-on: ubuntu-26.04
     steps:
       - name: "Checkout ${{ github.ref }} ( ${{ github.sha }} )"

@@ -54,11 +54,6 @@ PATTERNS = {
         r"^pyproject\.toml",
         r"^.pylintrc",
     ],
-    "python-deps": [
-        r"^pyproject\.toml$",
-        r"^requirements/",
-        r"^scripts/uv-pip-compile\.sh$",
-    ],
     "frontend": [
         r"^\.github/workflows/.*(bashlib|frontend|e2e)",
         r"^superset-frontend/",
