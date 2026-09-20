@@ -15,26 +15,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json  # noqa: TID251
+import json
 import re
-import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
 import tomli_w
-
 from superset_core.extensions.constants import (
     DISPLAY_NAME_PATTERN,
     PUBLISHER_PATTERN,
     TECHNICAL_NAME_PATTERN,
 )
+
 from superset_extensions_cli.exceptions import ExtensionNameError
 from superset_extensions_cli.types import ExtensionNames
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 # Python reserved keywords to avoid in package names
 PYTHON_KEYWORDS = {

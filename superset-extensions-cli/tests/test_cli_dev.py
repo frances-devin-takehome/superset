@@ -24,7 +24,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 from superset_core.extensions.types import Manifest
-from superset_extensions_cli.cli import app, FrontendChangeHandler
+
+from superset_extensions_cli.cli import FrontendChangeHandler, app
 
 
 # Dev Command Tests
@@ -209,28 +210,28 @@ def test_frontend_watcher_function_coverage(isolated_filesystem):
         displayName="Test Extension",
         version="1.0.0",
     )
-    with patch("superset_extensions_cli.cli.rebuild_frontend") as mock_rebuild:
-        with patch("superset_extensions_cli.cli.build_manifest") as mock_build:
-            with patch("superset_extensions_cli.cli.write_manifest") as mock_write:
-                mock_rebuild.return_value = "remoteEntry.abc123.js"
-                mock_build.return_value = mock_manifest
+    with (
+        patch("superset_extensions_cli.cli.rebuild_frontend") as mock_rebuild,
+        patch("superset_extensions_cli.cli.build_manifest") as mock_build,
+        patch("superset_extensions_cli.cli.write_manifest") as mock_write,
+    ):
+        mock_rebuild.return_value = "remoteEntry.abc123.js"
+        mock_build.return_value = mock_manifest
 
-                # Simulate frontend watcher function logic
-                frontend_dir = isolated_filesystem / "frontend"
-                frontend_dir.mkdir()
+        # Simulate frontend watcher function logic
+        frontend_dir = isolated_filesystem / "frontend"
+        frontend_dir.mkdir()
 
-                # Actually call the functions to simulate the frontend_watcher
-                if (
-                    remote_entry := mock_rebuild(isolated_filesystem, frontend_dir)
-                ) is not None:
-                    manifest = mock_build(isolated_filesystem, remote_entry)
-                    mock_write(isolated_filesystem, manifest)
+        # Actually call the functions to simulate the frontend_watcher
+        if (
+            remote_entry := mock_rebuild(isolated_filesystem, frontend_dir)
+        ) is not None:
+            manifest = mock_build(isolated_filesystem, remote_entry)
+            mock_write(isolated_filesystem, manifest)
 
-                mock_rebuild.assert_called_once_with(isolated_filesystem, frontend_dir)
-                mock_build.assert_called_once_with(
-                    isolated_filesystem, "remoteEntry.abc123.js"
-                )
-                mock_write.assert_called_once_with(isolated_filesystem, mock_manifest)
+        mock_rebuild.assert_called_once_with(isolated_filesystem, frontend_dir)
+        mock_build.assert_called_once_with(isolated_filesystem, "remoteEntry.abc123.js")
+        mock_write.assert_called_once_with(isolated_filesystem, mock_manifest)
 
 
 @pytest.mark.unit

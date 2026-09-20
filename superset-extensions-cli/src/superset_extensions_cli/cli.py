@@ -15,15 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json  # noqa: TID251
+import json
 import re
 import shutil
 import subprocess
 import sys
 import time
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import click
 import semver
@@ -69,8 +70,8 @@ def validate_npm() -> None:
         sys.exit(1)
 
     try:
-        result = subprocess.run(  # noqa: S603
-            ["npm", "-v"],  # noqa: S607
+        result = subprocess.run(  # noqa: PLW1510, UP022
+            ["npm", "-v"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -86,7 +87,7 @@ def validate_npm() -> None:
         npm_version = result.stdout.strip()
         if semver.compare(npm_version, MIN_NPM_VERSION) < 0:
             click.secho(
-                f"❌ npm version {npm_version} is lower than the required {MIN_NPM_VERSION}.",  # noqa: E501
+                f"❌ npm version {npm_version} is lower than the required {MIN_NPM_VERSION}.",
                 err=True,
                 fg="red",
             )
@@ -119,8 +120,8 @@ def init_frontend_deps(frontend_dir: Path) -> None:
             error_msg = "❌ `npm i` failed. Aborting."
 
         validate_npm()
-        res = subprocess.run(  # noqa: S603
-            npm_command,  # noqa: S607
+        res = subprocess.run(  # noqa: PLW1510
+            npm_command,
             cwd=frontend_dir,
             text=True,
         )
@@ -192,8 +193,8 @@ def write_manifest(cwd: Path, manifest: Manifest) -> None:
 def run_frontend_build(frontend_dir: Path) -> subprocess.CompletedProcess[str]:
     click.echo()
     click.secho("⚙️  Building frontend assets…", fg="cyan")
-    return subprocess.run(  # noqa: S603
-        ["npm", "run", "build"],  # noqa: S607
+    return subprocess.run(  # noqa: PLW1510
+        ["npm", "run", "build"],
         cwd=frontend_dir,
         text=True,
     )
@@ -323,7 +324,7 @@ def validate() -> None:
 
     try:
         extension = ExtensionConfig.model_validate(extension_data)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         click.secho(f"❌ Invalid extension.json: {e}", err=True, fg="red")
         sys.exit(1)
 
@@ -467,7 +468,7 @@ def update(version_opt: str | None, license_opt: str | None) -> None:
 
     try:
         extension = ExtensionConfig.model_validate(extension_data)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         click.secho(f"❌ Invalid extension.json: {e}", err=True, fg="red")
         sys.exit(1)
 
@@ -502,7 +503,7 @@ def update(version_opt: str | None, license_opt: str | None) -> None:
     if ext_changed:
         try:
             ExtensionConfig.model_validate(extension_data)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             click.secho(f"❌ Invalid value: {e}", err=True, fg="red")
             sys.exit(1)
         write_json(extension_json_path, extension_data)
@@ -618,7 +619,7 @@ def bundle(ctx: click.Context, output: Path | None) -> None:
                 if file.is_file():
                     arcname = file.relative_to(dist_dir)
                     zipf.write(file, arcname)
-    except Exception as ex:
+    except Exception as ex:  # noqa: BLE001
         click.secho(f"❌ Failed to create bundle: {ex}", err=True, fg="red")
         sys.exit(1)
 
@@ -649,10 +650,12 @@ def dev(ctx: click.Context) -> None:
     write_manifest(cwd, manifest)
 
     def frontend_watcher() -> None:
-        if frontend_dir.exists():
-            if (remote_entry := rebuild_frontend(cwd, frontend_dir)) is not None:
-                manifest = build_manifest(cwd, remote_entry)
-                write_manifest(cwd, manifest)
+        if (
+            frontend_dir.exists()
+            and (remote_entry := rebuild_frontend(cwd, frontend_dir)) is not None
+        ):
+            manifest = build_manifest(cwd, remote_entry)
+            write_manifest(cwd, manifest)
 
     def backend_watcher() -> None:
         if backend_dir.exists():
@@ -847,7 +850,7 @@ def init(
 
     # Set up Jinja environment
     templates_dir = Path(__file__).parent / "templates"
-    env = Environment(loader=FileSystemLoader(templates_dir))  # noqa: S701
+    env = Environment(loader=FileSystemLoader(templates_dir))
     ctx = {
         **names,  # Include all name variants
         "include_frontend": include_frontend,

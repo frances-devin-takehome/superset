@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import pytest
+
 from superset_extensions_cli.cli import app
 from superset_extensions_cli.utils import read_json, read_toml
 

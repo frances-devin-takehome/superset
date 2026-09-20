@@ -129,7 +129,9 @@ class StarRocksParser(_StarRocksParser):
     CONSTRAINT_PARSERS = {
         **_StarRocksParser.CONSTRAINT_PARSERS,
         **{
-            keyword: (lambda keyword: lambda self: exp.var(keyword))(keyword)
+            keyword: (lambda keyword: lambda self: exp.var(keyword))(  # noqa: B023
+                keyword
+            )
             for keyword in _STARROCKS_AGGREGATE_COLUMN_CONSTRAINTS
         },
         # Overrides MySQL's "KEY" (always a named inline secondary index) to
