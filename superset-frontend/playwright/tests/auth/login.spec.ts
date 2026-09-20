@@ -44,10 +44,12 @@ test.beforeEach(async ({ page }) => {
 test('should redirect to login with incorrect username and password', async ({
   page,
 }) => {
-  // The form submission is async (SupersetClient.postForm uses ensureAuth)
-  // so listen for the page reload before triggering the login
+  // The form submission is async (SupersetClient.postForm uses ensureAuth),
+  // so wait for the POST /login/ response rather than a generic `load` event:
+  // the initial page's own `load` may still be pending after goto() with
+  // `domcontentloaded`, which would resolve the wait before the reload.
   await Promise.all([
-    page.waitForEvent('load', { timeout: TIMEOUT.PAGE_LOAD }),
+    authPage.waitForLoginRequest(),
     authPage.loginWithCredentials('wronguser', 'wrongpassword'),
   ]);
 
@@ -55,11 +57,12 @@ test('should redirect to login with incorrect username and password', async ({
   await authPage.waitForLoginForm();
 
   // Verify we stay on login page
-  expect(page.url()).toContain(URL.LOGIN);
+  await expect(page).toHaveURL(new RegExp(`${URL.LOGIN}`), {
+    timeout: TIMEOUT.PAGE_LOAD,
+  });
 
-  // Verify error message is shown
-  const hasError = await authPage.hasLoginError();
-  expect(hasError).toBe(true);
+  // Verify error message is shown (auto-waits; the toast renders after mount)
+  await authPage.waitForLoginError({ timeout: TIMEOUT.PAGE_LOAD });
 });
 
 test('should login with correct username and password', async ({ page }) => {

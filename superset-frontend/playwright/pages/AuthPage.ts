@@ -174,6 +174,21 @@ export class AuthPage {
   }
 
   /**
+   * Wait for a login error (toast or form validation error) to become visible.
+   * The error toast is dispatched from a React effect after the post-submit
+   * reload, so it can appear slightly after the login form itself is rendered.
+   */
+  async waitForLoginError(options?: { timeout?: number }): Promise<void> {
+    await this.page
+      .locator(AuthPage.SELECTORS.ERROR_SELECTORS.join(', '))
+      .first()
+      .waitFor({
+        state: 'visible',
+        timeout: options?.timeout ?? TIMEOUT.UI_TRANSITION,
+      });
+  }
+
+  /**
    * Wait for a login request to be made and return the response
    */
   async waitForLoginRequest(): Promise<Response> {
