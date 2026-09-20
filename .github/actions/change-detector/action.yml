@@ -8,6 +8,9 @@ outputs:
   python:
     description: Whether Python-related files were changed
     value: ${{ steps.change-detector.outputs.python }}
+  python-deps:
+    description: Whether Python dependency declarations or lock files were changed
+    value: ${{ steps.change-detector.outputs.python-deps }}
   frontend:
     description: Whether frontend-related files were changed
     value: ${{ steps.change-detector.outputs.frontend }}

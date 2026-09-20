@@ -1,0 +1,88 @@
+# Fast, fork-local validation signal for automated remediation pull requests.
+#
+# Structure: a `detect` job runs the repository's own change-detector action and
+# publishes one flag per change category; each category job is guarded by its
+# flag and reuses the tooling that category already has in-tree. Adding a
+# category later means adding a pattern group in `scripts/change_detector.py`,
+# an output in `.github/actions/change-detector/action.yml`, and one job here —
+# no change to the categories that already exist.
+#
+# Categories validated:
+#   - python-deps: re-runs `./scripts/uv-pip-compile.sh` (the repository's
+#     dependency tooling, containerized on the pinned Python version) and fails
+#     when the regenerated requirements/*.txt differ from what the PR committed,
+#     ignoring comment-only and whitespace-only diffs.
+#
+# Limitations:
+#   - Nothing is installed, imported, or executed from the resolved dependency
+#     set, so runtime breakage from a version bump is not detected. The upstream
+#     test suites remain the only signal for that.
+#   - Dependency validation only covers state that `uv-pip-compile.sh`
+#     regenerates. Constraints that never take part in that resolution — most
+#     notably `[project.optional-dependencies]` extras, which are not compile
+#     inputs — are not checked, so a transitive pin can contradict an extra
+#     while this workflow stays green.
+#   - No vulnerability, license, frontend, Docker, or helm validation.
+#   - Resolution output is sensitive to the Python version and platform; the
+#     recompile runs in the same image contributor tooling uses, and changes to
+#     that image can shift results.
+name: Remediation validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    runs-on: ubuntu-26.04
+    outputs:
+      python-deps: ${{ steps.check.outputs.python-deps }}
+    steps:
+      - name: "Checkout ${{ github.ref }} ( ${{ github.sha }} )"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Check for file changes
+        id: check
+        uses: ./.github/actions/change-detector/
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  python-deps:
+    needs: detect
+    if: needs.detect.outputs.python-deps == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - name: "Checkout ${{ github.ref }} ( ${{ github.sha }} )"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Regenerate pinned requirements
+        run: ./scripts/uv-pip-compile.sh
+
+      - name: Check for uncommitted changes
+        run: |
+          echo "Full diff (for logging/debugging):"
+          git diff
+
+          filtered_diff=$(git diff -U0 | grep '^[-+]' | grep -vE '^[-+]{3}' | grep -vE '^[-+][[:space:]]*#' | grep -vE '^[-+][[:space:]]*$' || true)
+
+          if [[ -n "$filtered_diff" ]]; then
+            echo
+            echo "ERROR: The pinned dependencies are not up-to-date."
+            echo "Please run './scripts/uv-pip-compile.sh' and commit the changes."
+            exit 1
+          fi
+          echo "Pinned dependencies are up-to-date."
