@@ -40,6 +40,8 @@ from slack_sdk.errors import (
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.sql import func, text
 
+from superset.utils.dates import naive_utcnow
+
 try:
     # Flask-SQLAlchemy 3.x (required by SQLAlchemy 2.0)
     from flask_sqlalchemy.query import Query as BaseQuery
@@ -787,7 +789,7 @@ def test_email_chart_report_schedule_with_cc_bcc(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart_with_cc_and_bcc.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart_with_cc_and_bcc.id, naive_utcnow()
         ).run()
 
         notification_targets = get_target_from_report_schedule(
@@ -853,7 +855,7 @@ def test_email_chart_report_schedule(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart.id, naive_utcnow()
         ).run()
 
         notification_targets = get_target_from_report_schedule(
@@ -899,7 +901,7 @@ def test_email_chart_report_schedule_single_log_per_execution(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart.id, naive_utcnow()
         ).run()
 
         db.session.commit()
@@ -950,7 +952,7 @@ def test_email_chart_report_schedule_alpha_owner(
         AsyncExecuteReportScheduleCommand(
             TEST_ID,
             create_report_email_chart_alpha_owner.id,
-            datetime.utcnow(),
+            naive_utcnow(),
         ).run()
 
         notification_targets = get_target_from_report_schedule(
@@ -1000,7 +1002,7 @@ def test_email_chart_report_schedule_force_screenshot(
         AsyncExecuteReportScheduleCommand(
             TEST_ID,
             create_report_email_chart_force_screenshot.id,
-            datetime.utcnow(),
+            naive_utcnow(),
         ).run()
 
         notification_targets = get_target_from_report_schedule(
@@ -1039,7 +1041,7 @@ def test_email_chart_alert_schedule(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_alert_email_chart.id, datetime.utcnow()
+            TEST_ID, create_alert_email_chart.id, naive_utcnow()
         ).run()
 
         notification_targets = get_target_from_report_schedule(create_alert_email_chart)
@@ -1076,7 +1078,7 @@ def test_email_chart_report_dry_run(
     app.config["ALERT_REPORTS_NOTIFICATION_DRY_RUN"] = True
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart.id, naive_utcnow()
         ).run()
 
         email_mock.assert_not_called()
@@ -1110,7 +1112,7 @@ def test_email_chart_report_schedule_with_csv(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart_with_csv.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart_with_csv.id, naive_utcnow()
         ).run()
 
         notification_targets = get_target_from_report_schedule(
@@ -1158,7 +1160,7 @@ def test_email_chart_report_schedule_with_xlsx(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart_with_xlsx.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart_with_xlsx.id, naive_utcnow()
         ).run()
 
         notification_targets = get_target_from_report_schedule(
@@ -1209,7 +1211,7 @@ def test_email_chart_report_schedule_with_csv_no_query_context(
         AsyncExecuteReportScheduleCommand(
             TEST_ID,
             create_report_email_chart_with_csv_no_query_context.id,
-            datetime.utcnow(),
+            naive_utcnow(),
         ).run()
 
         # verify that when query context is null we request a screenshot
@@ -1260,7 +1262,7 @@ def test_email_chart_report_schedule_with_text(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart_with_text.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart_with_text.id, naive_utcnow()
         ).run()
 
         # assert that the data is embedded correctly
@@ -1315,7 +1317,7 @@ def test_email_chart_report_schedule_with_text(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart_with_text.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart_with_text.id, naive_utcnow()
         ).run()
 
         # assert that the data is embedded correctly
@@ -1366,7 +1368,7 @@ def test_email_dashboard_report_schedule(
             "superset.extensions.stats_logger_manager.instance.gauge"
         ) as statsd_mock:
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_report_email_dashboard.id, datetime.utcnow()
+                TEST_ID, create_report_email_dashboard.id, naive_utcnow()
             ).run()
 
             notification_targets = get_target_from_report_schedule(
@@ -1415,7 +1417,7 @@ def test_email_dashboard_report_schedule_with_tab_anchor(
                 },
             )
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, report_schedule.id, datetime.utcnow()
+                TEST_ID, report_schedule.id, naive_utcnow()
             ).run()
 
             # Assert logs are correct
@@ -1471,7 +1473,7 @@ def test_email_dashboard_report_schedule_disabled_tabs(
                 },
             )
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, report_schedule.id, datetime.utcnow()
+                TEST_ID, report_schedule.id, naive_utcnow()
             ).run()
 
             # Assert logs are correct
@@ -1506,7 +1508,7 @@ def test_email_dashboard_report_schedule_force_screenshot(
         AsyncExecuteReportScheduleCommand(
             TEST_ID,
             create_report_email_dashboard_force_screenshot.id,
-            datetime.utcnow(),
+            naive_utcnow(),
         ).run()
 
         notification_targets = get_target_from_report_schedule(
@@ -1562,7 +1564,7 @@ def test_slack_chart_report_schedule_converts_to_v2(
             "superset.extensions.stats_logger_manager.instance.gauge"
         ) as statsd_mock:
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_report_slack_chart.id, datetime.utcnow()
+                TEST_ID, create_report_slack_chart.id, naive_utcnow()
             ).run()
 
             assert (
@@ -1627,7 +1629,7 @@ def test_slack_chart_report_schedule_converts_to_v2_channel_with_hash(
             "superset.extensions.stats_logger_manager.instance.gauge"
         ) as statsd_mock:
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, report_schedule.id, datetime.utcnow()
+                TEST_ID, report_schedule.id, naive_utcnow()
             ).run()
 
             assert (
@@ -1689,7 +1691,7 @@ def test_slack_chart_report_schedule_failed_v2_conversion_rejects_v1_file_upload
             pytest.raises(ReportScheduleClientErrorsException),
         ):
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, report_schedule.id, datetime.utcnow()
+                TEST_ID, report_schedule.id, naive_utcnow()
             ).run()
 
         expected_message = (
@@ -1738,7 +1740,7 @@ def test_slack_chart_report_schedule_v2(
             "superset.extensions.stats_logger_manager.instance.gauge"
         ) as statsd_mock:
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_report_slack_chartv2.id, datetime.utcnow()
+                TEST_ID, create_report_slack_chartv2.id, naive_utcnow()
             ).run()
 
             assert (
@@ -1785,7 +1787,7 @@ def test_slack_chart_report_schedule_with_errors(
 
         with pytest.raises(ReportScheduleClientErrorsException):
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_report_slack_chart.id, datetime.utcnow()
+                TEST_ID, create_report_slack_chart.id, naive_utcnow()
             ).run()
 
         db.session.commit()
@@ -1834,7 +1836,7 @@ def test_slack_chart_report_schedule_with_csv(
     with freeze_time("2020-01-01T00:00:00Z"):
         with pytest.raises(ReportScheduleClientErrorsException):
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_report_slack_chart_with_csv.id, datetime.utcnow()
+                TEST_ID, create_report_slack_chart_with_csv.id, naive_utcnow()
             ).run()
 
         expected_message = (
@@ -1875,7 +1877,7 @@ def test_slack_chart_report_schedule_with_xlsx(
     with freeze_time("2020-01-01T00:00:00Z"):
         with pytest.raises(ReportScheduleClientErrorsException):
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_report_slack_chart_with_xlsx.id, datetime.utcnow()
+                TEST_ID, create_report_slack_chart_with_xlsx.id, naive_utcnow()
             ).run()
 
         expected_message = (
@@ -1931,7 +1933,7 @@ def test_slack_chart_report_schedule_with_text(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_slack_chart_with_text.id, datetime.utcnow()
+            TEST_ID, create_report_slack_chart_with_text.id, naive_utcnow()
         ).run()
 
         table_markdown = """|    | t1   | t2   | t3__sum   |
@@ -1996,7 +1998,7 @@ def test_slack_text_fallback_persists_success_for_multiple_recipient_rows(
         AsyncExecuteReportScheduleCommand(
             TEST_ID,
             report_schedule_id,
-            datetime.utcnow(),
+            naive_utcnow(),
         ).run()
 
     db.session.expire_all()
@@ -2104,7 +2106,7 @@ def test_slack_text_fallback_persists_later_recipient_ambiguous_failure(
         AsyncExecuteReportScheduleCommand(
             TEST_ID,
             report_schedule_id,
-            datetime.utcnow(),
+            naive_utcnow(),
         ).run()
 
     db.session.expire_all()
@@ -2163,7 +2165,7 @@ def test_report_schedule_not_found(create_report_slack_chart):
     """
     max_id = db.session.query(func.max(ReportSchedule.id)).scalar()
     with pytest.raises(ReportScheduleNotFoundError):
-        AsyncExecuteReportScheduleCommand(TEST_ID, max_id + 1, datetime.utcnow()).run()
+        AsyncExecuteReportScheduleCommand(TEST_ID, max_id + 1, naive_utcnow()).run()
 
 
 @pytest.mark.usefixtures("create_report_slack_chart_working")
@@ -2177,7 +2179,7 @@ def test_report_schedule_working(create_report_slack_chart_working):
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_report_slack_chart_working.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
 
         assert_log(
@@ -2209,7 +2211,7 @@ def test_report_schedule_same_execution_replay_stays_working(
             AsyncExecuteReportScheduleCommand(
                 str(active_log.uuid),
                 create_report_slack_chart_working.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
 
     db.session.refresh(active_log)
@@ -2261,7 +2263,7 @@ def test_same_execution_replay_write_failure_does_not_claim_active_row(
             AsyncExecuteReportScheduleCommand(
                 str(active_log.uuid),
                 create_report_slack_chart_working.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
 
     db.session.refresh(active_log)
@@ -2284,7 +2286,7 @@ def test_report_schedule_working_timeout(create_report_slack_chart_working):
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_report_slack_chart_working.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
 
     logs = db.session.query(ReportExecutionLog).all()
@@ -2310,7 +2312,7 @@ def test_report_schedule_success_grace(create_alert_slack_chart_success):
 
     with freeze_time(current_time):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_alert_slack_chart_success.id, datetime.utcnow()
+            TEST_ID, create_alert_slack_chart_success.id, naive_utcnow()
         ).run()
 
     db.session.commit()
@@ -2363,7 +2365,7 @@ def test_report_schedule_success_grace_end(
 
     with freeze_time(current_time):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_alert_slack_chart_grace.id, datetime.utcnow()
+            TEST_ID, create_alert_slack_chart_grace.id, naive_utcnow()
         ).run()
 
     db.session.commit()
@@ -2399,7 +2401,7 @@ def test_alert_limit_is_applied(
             return_value=[],
         ):  # noqa: F841
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_alert_email_chart.id, datetime.utcnow()
+                TEST_ID, create_alert_email_chart.id, naive_utcnow()
             ).run()
             assert "LIMIT 2" in execute_mock.call_args[0][1]
 
@@ -2423,7 +2425,7 @@ def test_email_dashboard_report_fails(
 
     with pytest.raises(ReportScheduleSystemErrorsException):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_dashboard.id, datetime.utcnow()
+            TEST_ID, create_report_email_dashboard.id, naive_utcnow()
         ).run()
 
     assert_log(ReportState.ERROR, error_message="Could not connect to SMTP XPTO")
@@ -2450,7 +2452,7 @@ def test_email_dashboard_report_fails_uncaught_exception(
 
     with pytest.raises(Exception):  # noqa: B017, PT011
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_dashboard.id, datetime.utcnow()
+            TEST_ID, create_report_email_dashboard.id, naive_utcnow()
         ).run()
 
     assert_log(ReportState.ERROR, error_message="Uncaught exception")
@@ -2483,7 +2485,7 @@ def test_slack_chart_alert(
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_alert_email_chart.id, datetime.utcnow()
+            TEST_ID, create_alert_email_chart.id, naive_utcnow()
         ).run()
 
         notification_targets = get_target_from_report_schedule(create_alert_email_chart)
@@ -2512,7 +2514,7 @@ def test_slack_chart_alert_no_attachment(email_mock, create_alert_email_chart):
 
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_alert_email_chart.id, datetime.utcnow()
+            TEST_ID, create_alert_email_chart.id, naive_utcnow()
         ).run()
 
         notification_targets = get_target_from_report_schedule(create_alert_email_chart)
@@ -2573,7 +2575,7 @@ def test_slack_token_callable_chart_report(
 
         with freeze_time("2020-01-01T00:00:00Z"):
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_report_slack_chart.id, datetime.utcnow()
+                TEST_ID, create_report_slack_chart.id, naive_utcnow()
             ).run()
             slack_token_mock.assert_called()
             assert slack_client_mock_class.call_args_list == [
@@ -2600,7 +2602,7 @@ def test_email_chart_no_alert(create_no_alert_email_chart):
     """
     with freeze_time("2020-01-01T00:00:00Z"):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_no_alert_email_chart.id, datetime.utcnow()
+            TEST_ID, create_no_alert_email_chart.id, naive_utcnow()
         ).run()
     assert_log(ReportState.NOOP)
 
@@ -2615,7 +2617,7 @@ def test_email_mul_alert(create_mul_alert_email_chart):
             (AlertQueryMultipleRowsError, AlertQueryMultipleColumnsError)
         ):
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_mul_alert_email_chart.id, datetime.utcnow()
+                TEST_ID, create_mul_alert_email_chart.id, naive_utcnow()
             ).run()
 
 
@@ -2637,7 +2639,7 @@ def test_soft_timeout_alert(email_mock, create_alert_email_chart):
         execute_mock.side_effect = SoftTimeLimitExceeded()
         with pytest.raises(AlertQueryTimeout):
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, create_alert_email_chart.id, datetime.utcnow()
+                TEST_ID, create_alert_email_chart.id, naive_utcnow()
             ).run()
 
     get_target_from_report_schedule(create_alert_email_chart)  # noqa: F841
@@ -2667,7 +2669,7 @@ def test_soft_timeout_screenshot(screenshot_mock, email_mock, create_alert_email
     screenshot_mock.side_effect = SoftTimeLimitExceeded()
     with pytest.raises(ReportScheduleScreenshotTimeout):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_alert_email_chart.id, datetime.utcnow()
+            TEST_ID, create_alert_email_chart.id, naive_utcnow()
         ).run()
 
     # Assert the email smtp address, asserts a notification was sent with the error
@@ -2704,7 +2706,7 @@ def test_soft_timeout_csv(
 
     with pytest.raises(SoftTimeLimitExceeded):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart_with_csv.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart_with_csv.id, naive_utcnow()
         ).run()
 
     # Reports preserve the hard-limit grace for terminal persistence instead
@@ -2741,7 +2743,7 @@ def test_generate_no_csv(
 
     with pytest.raises(ReportScheduleCsvFailedError):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart_with_csv.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart_with_csv.id, naive_utcnow()
         ).run()
 
     get_target_from_report_schedule(create_report_email_chart_with_csv)  # noqa: F841
@@ -2770,7 +2772,7 @@ def test_fail_screenshot(screenshot_mock, email_mock, create_report_email_chart)
     screenshot_mock.side_effect = Exception("Unexpected error")
     with pytest.raises(ReportScheduleScreenshotFailedError):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart.id, naive_utcnow()
         ).run()
 
     get_target_from_report_schedule(create_report_email_chart)  # noqa: F841
@@ -2830,7 +2832,7 @@ def test_readiness_timeout_retries_terminal_persistence_and_allows_next_schedule
         AsyncExecuteReportScheduleCommand(
             TEST_ID,
             create_report_email_chart.id,
-            datetime.utcnow(),
+            naive_utcnow(),
         ).run()
 
     assert terminal_write_failed
@@ -2862,7 +2864,7 @@ def test_readiness_timeout_retries_terminal_persistence_and_allows_next_schedule
     AsyncExecuteReportScheduleCommand(
         next_execution_id,
         create_report_email_chart.id,
-        datetime.utcnow(),
+        naive_utcnow(),
     ).run()
 
     db.session.refresh(create_report_email_chart)
@@ -2905,7 +2907,7 @@ def test_fail_csv(
 
     with pytest.raises(ReportScheduleCsvFailedError):
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_report_email_chart_with_csv.id, datetime.utcnow()
+            TEST_ID, create_report_email_chart_with_csv.id, naive_utcnow()
         ).run()
 
     get_target_from_report_schedule(create_report_email_chart_with_csv)
@@ -2940,7 +2942,7 @@ def test_email_disable_screenshot(email_mock, create_alert_email_chart):
     """
 
     AsyncExecuteReportScheduleCommand(
-        TEST_ID, create_alert_email_chart.id, datetime.utcnow()
+        TEST_ID, create_alert_email_chart.id, naive_utcnow()
     ).run()
 
     notification_targets = get_target_from_report_schedule(create_alert_email_chart)
@@ -2962,7 +2964,7 @@ def test_invalid_sql_alert(email_mock, create_invalid_sql_alert_email_chart):
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_invalid_sql_alert_email_chart.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
 
         # Assert the email smtp address, asserts a notification was sent with the error
@@ -2980,7 +2982,7 @@ def test_grace_period_error(email_mock, create_invalid_sql_alert_email_chart):
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_invalid_sql_alert_email_chart.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
 
         # Assert the email smtp address, asserts a notification was sent with the error
@@ -2994,7 +2996,7 @@ def test_grace_period_error(email_mock, create_invalid_sql_alert_email_chart):
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_invalid_sql_alert_email_chart.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
         db.session.commit()
         assert (
@@ -3007,7 +3009,7 @@ def test_grace_period_error(email_mock, create_invalid_sql_alert_email_chart):
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_invalid_sql_alert_email_chart.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
         db.session.commit()
         assert (
@@ -3030,7 +3032,7 @@ def test_grace_period_error_flap(
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_invalid_sql_alert_email_chart.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
         db.session.commit()
         # Assert we have 1 notification sent on the log
@@ -3043,7 +3045,7 @@ def test_grace_period_error_flap(
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_invalid_sql_alert_email_chart.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
         db.session.commit()
         assert (
@@ -3058,11 +3060,11 @@ def test_grace_period_error_flap(
     with freeze_time("2020-01-01T00:31:00Z"):
         # One success
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_invalid_sql_alert_email_chart.id, datetime.utcnow()
+            TEST_ID, create_invalid_sql_alert_email_chart.id, naive_utcnow()
         ).run()
         # Grace period ends
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, create_invalid_sql_alert_email_chart.id, datetime.utcnow()
+            TEST_ID, create_invalid_sql_alert_email_chart.id, naive_utcnow()
         ).run()
 
         db.session.commit()
@@ -3078,7 +3080,7 @@ def test_grace_period_error_flap(
             AsyncExecuteReportScheduleCommand(
                 TEST_ID,
                 create_invalid_sql_alert_email_chart.id,
-                datetime.utcnow(),
+                naive_utcnow(),
             ).run()
         db.session.commit()
         assert (
@@ -3104,7 +3106,7 @@ def test_prune_log_soft_time_out(bulk_delete_logs, create_report_email_dashboard
 def test__send_with_client_errors(notification_mock, logger_mock):
     notification_content = NotificationContent(name="I am some content", header_data={})
     recipients = ["test@foo.com"]
-    report_state = BaseReportState(ReportSchedule(), datetime.utcnow(), uuid4())
+    report_state = BaseReportState(ReportSchedule(), naive_utcnow(), uuid4())
     notification_mock.return_value.send.side_effect = NotificationParamException()
     with pytest.raises(ReportScheduleClientErrorsException) as excinfo:
         report_state._send(notification_content, recipients)
@@ -3120,7 +3122,7 @@ def test__send_with_client_errors(notification_mock, logger_mock):
 def test__send_with_multiple_errors(notification_mock, logger_mock):
     notification_content = NotificationContent(name="I am some content", header_data={})
     recipients = ["test@foo.com", "test2@bar.com"]
-    report_state = BaseReportState(ReportSchedule(), datetime.utcnow(), uuid4())
+    report_state = BaseReportState(ReportSchedule(), naive_utcnow(), uuid4())
     notification_mock.return_value.send.side_effect = [
         NotificationParamException(),
         NotificationError(),
@@ -3148,7 +3150,7 @@ def test__send_with_multiple_errors(notification_mock, logger_mock):
 def test__send_with_server_errors(notification_mock, logger_mock):
     notification_content = NotificationContent(name="I am some content", header_data={})
     recipients = ["test@foo.com"]
-    report_state = BaseReportState(ReportSchedule(), datetime.utcnow(), uuid4())
+    report_state = BaseReportState(ReportSchedule(), naive_utcnow(), uuid4())
     notification_mock.return_value.send.side_effect = NotificationError()
     with pytest.raises(ReportScheduleSystemErrorsException) as excinfo:
         report_state._send(notification_content, recipients)
@@ -3194,7 +3196,7 @@ def test_retry_on_failure_schedules_retry(
 
         # Should NOT re-raise (retry path exits cleanly)
         AsyncExecuteReportScheduleCommand(
-            TEST_ID, report_schedule.id, datetime.utcnow()
+            TEST_ID, report_schedule.id, naive_utcnow()
         ).run()
 
         db.session.refresh(report_schedule)
@@ -3384,7 +3386,7 @@ def test_retry_disabled_preserves_default_error_path(
 
         with pytest.raises(Exception, match="screenshot failed"):
             AsyncExecuteReportScheduleCommand(
-                TEST_ID, report_schedule.id, datetime.utcnow()
+                TEST_ID, report_schedule.id, naive_utcnow()
             ).run()
 
         db.session.refresh(report_schedule)
@@ -3579,7 +3581,7 @@ def test_get_retry_delay_exponential_backoff() -> None:
         name="delay_test",
         crontab="0 9 * * *",
     )
-    state = BaseReportState(report_schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(report_schedule, naive_utcnow(), uuid4())
     assert state._get_retry_delay(0) == 60  # 60 * 2^0 = 60
     assert state._get_retry_delay(1) == 120  # 60 * 2^1 = 120
     assert state._get_retry_delay(2) == 240  # 60 * 2^2 = 240

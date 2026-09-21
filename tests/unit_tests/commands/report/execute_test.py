@@ -77,6 +77,7 @@ from superset.reports.notifications.slack import SlackNotification
 from superset.reports.notifications.slack_channel_resolver import _match_slack_channel
 from superset.subjects.types import SubjectType
 from superset.utils.core import HeaderDataType
+from superset.utils.dates import naive_utcnow
 from superset.utils.report_execution import (
     ReportExecutionBudgetExceededError,
     ReportExecutionContext,
@@ -3143,7 +3144,7 @@ def test_send_does_not_fall_back_to_slack_v1_for_file_uploads(
 def test_update_query_context_wraps_screenshot_failure(mocker: MockerFixture) -> None:
     """_update_query_context wraps ScreenshotFailedError as CsvFailedError."""
     schedule = mocker.Mock(spec=ReportSchedule)
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._report_schedule = schedule
     mocker.patch.object(
         state,
@@ -3159,7 +3160,7 @@ def test_update_query_context_wraps_screenshot_failure_xlsx(
 ) -> None:
     """_update_query_context surfaces the caller's error class (XLSX, not CSV)."""
     schedule = mocker.Mock(spec=ReportSchedule)
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._report_schedule = schedule
     mocker.patch.object(
         state,
@@ -3173,7 +3174,7 @@ def test_update_query_context_wraps_screenshot_failure_xlsx(
 def test_update_query_context_wraps_screenshot_timeout(mocker: MockerFixture) -> None:
     """_update_query_context wraps ScreenshotTimeout as CsvFailedError."""
     schedule = mocker.Mock(spec=ReportSchedule)
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._report_schedule = schedule
     mocker.patch.object(
         state,
@@ -3193,7 +3194,7 @@ def test_create_log_stale_data_raises_unexpected_error(mocker: MockerFixture) ->
     schedule.last_value_row_json = None
     schedule.last_state = ReportState.WORKING
 
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._report_schedule = schedule
 
     mock_db = mocker.patch("superset.commands.report.execute.db")
@@ -3249,7 +3250,7 @@ def _make_notification_state(
 
     schedule.extra = {}
 
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._report_schedule = schedule
 
     # Stub helpers that _get_notification_content calls
@@ -3455,7 +3456,7 @@ def test_slack_retry_deadline_clamps_elapsed_working_timeout(
     """An exhausted report timeout produces an already-expired Slack deadline."""
     state = _make_notification_state(mocker)
     state._report_schedule.working_timeout = 10
-    state._start_dttm = datetime.utcnow() - timedelta(seconds=11)
+    state._start_dttm = naive_utcnow() - timedelta(seconds=11)
     mocker.patch("superset.commands.report.execute.time.monotonic", return_value=50.0)
     deadline_factory = mocker.patch(
         "superset.commands.report.execute.get_slack_send_retry_deadline",
@@ -3590,7 +3591,7 @@ def _make_state_instance(
     schedule.last_state = last_state
     schedule.grace_period = grace_period
     schedule.working_timeout = working_timeout
-    schedule.last_eval_dttm = datetime.utcnow()
+    schedule.last_eval_dttm = naive_utcnow()
     schedule.name = "Test"
     schedule.editors = []
     schedule.recipients = []
@@ -3604,7 +3605,7 @@ def _make_state_instance(
     schedule.retry_notify_owners = True
     schedule.retry_notify_recipients = False
 
-    instance = cls(schedule, datetime.utcnow(), uuid4())
+    instance = cls(schedule, naive_utcnow(), uuid4())
     instance._report_schedule = schedule
     return instance
 
@@ -3615,7 +3616,7 @@ def test_working_state_timeout_raises_timeout_error(mocker: MockerFixture) -> No
     mocker.patch.object(state, "is_on_working_timeout", return_value=True)
 
     mock_log = mocker.Mock()
-    mock_log.end_dttm = datetime.utcnow() - timedelta(hours=2)
+    mock_log.end_dttm = naive_utcnow() - timedelta(hours=2)
     mock_log.uuid = uuid4()
     mocker.patch(
         "superset.commands.report.execute.ReportScheduleDAO.find_last_entered_working_log",
@@ -3663,7 +3664,7 @@ def test_working_timeout_replay_delegates_single_terminal_update(
     working_log = mocker.Mock()
     working_log.uuid = state._execution_id
     working_log.state = ReportState.WORKING
-    working_log.end_dttm = datetime.utcnow() - timedelta(minutes=20)
+    working_log.end_dttm = naive_utcnow() - timedelta(minutes=20)
     mocker.patch(
         "superset.commands.report.execute.ReportScheduleDAO.find_last_entered_working_log",
         return_value=working_log,
@@ -3695,7 +3696,7 @@ def test_stale_recovery_delegates_terminal_update_without_delivery(
     working_log.uuid = uuid4()
     working_log.state = ReportState.WORKING
     working_log.error_message = None
-    working_log.end_dttm = datetime.utcnow() - timedelta(minutes=20)
+    working_log.end_dttm = naive_utcnow() - timedelta(minutes=20)
     mocker.patch(
         "superset.commands.report.execute.ReportScheduleDAO.find_last_entered_working_log",
         return_value=working_log,
@@ -3733,7 +3734,7 @@ def test_report_working_state_recovery_is_bounded_by_execution_budget(
         working_timeout=3600,
     )
     working_log = mocker.Mock()
-    working_log.end_dttm = datetime.utcnow() - timedelta(minutes=20)
+    working_log.end_dttm = naive_utcnow() - timedelta(minutes=20)
     mocker.patch(
         "superset.commands.report.execute.ReportScheduleDAO.find_last_entered_working_log",
         return_value=working_log,
@@ -3858,7 +3859,7 @@ def test_not_triggered_error_state_success_clears_retry_state(
         schedule_type=ReportScheduleType.REPORT,
     )
     state._report_schedule.retry_attempt = 2
-    state._report_schedule.retry_scheduled_dttm = datetime.utcnow()
+    state._report_schedule.retry_scheduled_dttm = naive_utcnow()
     mocker.patch.object(state, "send")
     mock_update = mocker.patch.object(state, "update_report_schedule_and_log")
 
@@ -3974,7 +3975,7 @@ def test_state_machine_unknown_state_raises_not_found(
     # Use a string that isn't in any state class's current_states
     schedule.last_state = "NONEXISTENT_STATE"
 
-    sm = ReportScheduleStateMachine(uuid4(), schedule, datetime.utcnow())
+    sm = ReportScheduleStateMachine(uuid4(), schedule, naive_utcnow())
     with pytest.raises(ReportScheduleStateNotFoundError):
         sm.run()
 
@@ -4048,7 +4049,7 @@ def test_create_log_success_commits(mocker: MockerFixture) -> None:
     schedule.last_value_row_json = '{"col": 42}'
     schedule.last_state = ReportState.SUCCESS
 
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._report_schedule = schedule
 
     mock_db = mocker.patch("superset.commands.report.execute.db")
@@ -4077,7 +4078,7 @@ def test_create_log_includes_execution_warnings_with_error(
     schedule.last_value_row_json = None
     schedule.last_state = ReportState.ERROR
 
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._execution_warnings.append("Slack v1 fallback is deprecated")
 
     mock_db = mocker.patch("superset.commands.report.execute.db")
@@ -4102,7 +4103,7 @@ def test_create_log_preserves_error_notification_marker(
     schedule.last_value_row_json = None
     schedule.last_state = ReportState.ERROR
 
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._execution_warnings.append("Slack v1 fallback is deprecated")
 
     mock_db = mocker.patch("superset.commands.report.execute.db")
@@ -4128,7 +4129,7 @@ def test_create_log_excludes_warnings_from_secondary_error(
     schedule.last_value_row_json = None
     schedule.last_state = ReportState.ERROR
 
-    state = BaseReportState(schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(schedule, naive_utcnow(), uuid4())
     state._execution_warnings.append("Slack v1 fallback is deprecated")
 
     mock_db = mocker.patch("superset.commands.report.execute.db")
@@ -4165,7 +4166,7 @@ def test_create_log_promotes_same_execution_working_row_without_duplicate(
     log_cls = mocker.patch("superset.commands.report.execute.ReportExecutionLog")
     state = BaseReportState(
         schedule,
-        datetime.utcnow(),
+        naive_utcnow(),
         execution_id,
     )
 
@@ -4224,7 +4225,7 @@ def test_alert_log_context_fallback_is_self_identifying(
     schedule.dashboard_id = None
     schedule.chart_id = 19495
 
-    state = BaseReportState(schedule, datetime.utcnow(), execution_id)
+    state = BaseReportState(schedule, naive_utcnow(), execution_id)
 
     context = state._log_context
     assert "capture_kind=alert" in context
@@ -4356,7 +4357,7 @@ def test_success_state_report_sends_and_logs_success(
         schedule_type=ReportScheduleType.REPORT,
     )
     state._report_schedule.retry_attempt = 2
-    state._report_schedule.retry_scheduled_dttm = datetime.utcnow()
+    state._report_schedule.retry_scheduled_dttm = naive_utcnow()
     mock_send = mocker.patch.object(state, "send")
     mock_update = mocker.patch.object(state, "update_report_schedule_and_log")
 
@@ -4647,7 +4648,7 @@ def test_get_url_raises_when_target_chart_soft_deleted(
     report_schedule.dashboard_id = None
     report_schedule.dashboard = None
 
-    state = BaseReportState(report_schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(report_schedule, naive_utcnow(), uuid4())
     with pytest.raises(ReportScheduleTargetChartDeletedError):
         state._get_url()
 
@@ -4670,7 +4671,7 @@ def test_get_url_raises_when_target_dashboard_soft_deleted(
     report_schedule.dashboard_id = 7
     report_schedule.dashboard = None
 
-    state = BaseReportState(report_schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(report_schedule, naive_utcnow(), uuid4())
     with pytest.raises(ReportScheduleTargetDashboardDeletedError):
         state._get_url()
 
@@ -4691,7 +4692,7 @@ def test_get_url_uses_valid_chart_with_stale_dashboard_reference(
         return_value="/chart",
     )
 
-    state = BaseReportState(report_schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(report_schedule, naive_utcnow(), uuid4())
 
     assert state._get_url() == "/chart"
     get_url_path.assert_called_once_with(
@@ -4717,7 +4718,7 @@ def test_get_dashboard_urls_raises_when_target_dashboard_soft_deleted(
     report_schedule.dashboard_id = 7
     report_schedule.dashboard = None
 
-    state = BaseReportState(report_schedule, datetime.utcnow(), uuid4())
+    state = BaseReportState(report_schedule, naive_utcnow(), uuid4())
     with pytest.raises(ReportScheduleTargetDashboardDeletedError):
         state.get_dashboard_urls()
 
@@ -4814,7 +4815,7 @@ def test_chart_data_normalizes_transport_timeouts(
         ReportScheduleXlsxTimeout,
     )
 
-    state = BaseReportState(create_report_schedule(mocker), datetime.utcnow(), uuid4())
+    state = BaseReportState(create_report_schedule(mocker), naive_utcnow(), uuid4())
     _mock_xlsx_chart_data_dependencies(mocker, state)
     if post:
         state._report_schedule.chart.query_context = "{}"
@@ -4849,7 +4850,7 @@ def test_chart_data_http_failure_does_not_expose_request(
     from io import BytesIO
     from urllib.error import HTTPError
 
-    state = BaseReportState(create_report_schedule(mocker), datetime.utcnow(), uuid4())
+    state = BaseReportState(create_report_schedule(mocker), naive_utcnow(), uuid4())
     get_url, cookies = _mock_xlsx_chart_data_dependencies(mocker, state)
     cookies["session"] = "COOKIE_SECRET"
     get_url.return_value = (

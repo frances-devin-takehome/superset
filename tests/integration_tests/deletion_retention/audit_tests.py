@@ -36,6 +36,7 @@ from superset.commands.deletion_retention.purge_policy import (
 )
 from superset.models.slice import Slice
 from superset.tasks.deletion_retention import _purge_impl
+from superset.utils.dates import naive_utcnow
 
 from ._base import DeletionRetentionTestBase
 
@@ -165,7 +166,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         assert row.status == audit.STATUS_PENDING
 
         result = audit.reconcile_pending(
-            stale_before=datetime.utcnow() + timedelta(seconds=1)
+            stale_before=naive_utcnow() + timedelta(seconds=1)
         )
         db.session.expire_all()
 
@@ -190,7 +191,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         )
 
         result = audit.reconcile_pending(
-            stale_before=datetime.utcnow() + timedelta(seconds=1)
+            stale_before=naive_utcnow() + timedelta(seconds=1)
         )
         db.session.expire_all()
 
@@ -218,7 +219,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         )
 
         result = audit.reconcile_pending(
-            stale_before=datetime.utcnow() + timedelta(seconds=1)
+            stale_before=naive_utcnow() + timedelta(seconds=1)
         )
         db.session.expire_all()
 
@@ -353,7 +354,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
 
     def test_mixed_reason_timestamp_tie_is_ambiguous_and_retains(self) -> None:
         """Tied predecessors differing only in reason refuse suppression."""
-        timestamp: datetime = datetime.utcnow()
+        timestamp: datetime = naive_utcnow()
         first_id: UUID = self._write_retention_record(
             entity_uuid="mixed-reason-tie", created_on=timestamp
         )
@@ -429,7 +430,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         causes retention. This verifies timestamp ordering, not causal order
         across workers.
         """
-        timestamp: datetime = datetime.utcnow()
+        timestamp: datetime = naive_utcnow()
         older_id: UUID = self._write_retention_record(
             entity_uuid="latest-overall", created_on=timestamp - timedelta(seconds=1)
         )
@@ -451,7 +452,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         assert current.status == audit.STATUS_BLOCKED
 
     def test_equal_timestamp_is_ambiguous_and_retains_current(self) -> None:
-        timestamp: datetime = datetime.utcnow()
+        timestamp: datetime = naive_utcnow()
         first_id: UUID = self._write_retention_record(
             entity_uuid="equal-time", created_on=timestamp
         )
@@ -469,7 +470,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         assert second.status == audit.STATUS_BLOCKED
 
     def test_tied_mixed_predecessors_are_ambiguous_and_retain_current(self) -> None:
-        timestamp: datetime = datetime.utcnow()
+        timestamp: datetime = naive_utcnow()
         blocked_id: UUID = self._write_retention_record(
             entity_uuid="mixed-tie", created_on=timestamp
         )
@@ -501,7 +502,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         assert retained.status == audit.STATUS_BLOCKED
 
     def test_newer_concurrent_row_does_not_become_a_predecessor(self) -> None:
-        current_time: datetime = datetime.utcnow()
+        current_time: datetime = naive_utcnow()
         current_id: UUID = self._write_retention_record(
             entity_uuid="overlap", created_on=current_time
         )
@@ -519,7 +520,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         assert current.status == audit.STATUS_BLOCKED
 
     def test_pending_predecessor_retains_current_block(self) -> None:
-        timestamp: datetime = datetime.utcnow()
+        timestamp: datetime = naive_utcnow()
         self._write_retention_record(entity_uuid="pending-prior", created_on=timestamp)
         current_id: UUID = self._write_retention_record(
             entity_uuid="pending-prior", created_on=timestamp + timedelta(seconds=1)
@@ -689,7 +690,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
         assert record.status == audit.STATUS_PENDING
 
     def test_indeterminate_delete_rowcount_forces_persistence_recovery(self) -> None:
-        timestamp: datetime = datetime.utcnow()
+        timestamp: datetime = naive_utcnow()
         current: PurgeAuditLog = PurgeAuditLog(
             id=UUID("00000000-0000-0000-0000-000000000002"),
             status=audit.STATUS_PENDING,
@@ -719,7 +720,7 @@ class TestPurgeAudit(DeletionRetentionTestBase):
             )
 
     def test_overlap_duplicates_do_not_cause_unbounded_sequential_growth(self) -> None:
-        timestamp: datetime = datetime.utcnow()
+        timestamp: datetime = naive_utcnow()
         first_id: UUID = self._write_retention_record(
             entity_uuid="bounded-overlap", created_on=timestamp
         )

@@ -21,6 +21,7 @@ from functools import partial
 from typing import Any, Dict, SupportsInt  # noqa: F401
 
 from superset.jinja_context import PrestoTemplateProcessor
+from superset.utils.dates import naive_utcnow
 
 
 def DATE(  # noqa: N802
@@ -40,7 +41,7 @@ class CustomPrestoTemplateProcessor(PrestoTemplateProcessor):
     def process_template(self, sql: str, **kwargs) -> str:
         """Processes a sql template with $ style macro using regex."""
         # Add custom macros functions.
-        macros = {"DATE": partial(DATE, datetime.utcnow())}  # type: Dict[str, Any]
+        macros = {"DATE": partial(DATE, naive_utcnow())}  # type: Dict[str, Any]
         # Update with macros defined in context and kwargs.
         macros.update(self._context)
         macros.update(kwargs)

@@ -39,6 +39,7 @@ from superset.models.purge_audit_log import (
     PurgeAuditCoordination,
 )
 from superset.models.slice import Slice
+from superset.utils.dates import naive_utcnow
 from tests.integration_tests.base_tests import SupersetTestCase
 
 _PREFIX = "retention_it_"
@@ -176,7 +177,7 @@ class DeletionRetentionTestBase(SupersetTestCase):
                 sa.text(
                     "INSERT INTO version_transaction (id, issued_at) VALUES (:t, :ts)"
                 ),
-                {"t": tx_id, "ts": datetime.utcnow()},
+                {"t": tx_id, "ts": naive_utcnow()},
             )
         if (
             end_tx_id is not None
@@ -189,7 +190,7 @@ class DeletionRetentionTestBase(SupersetTestCase):
                 sa.text(
                     "INSERT INTO version_transaction (id, issued_at) VALUES (:t, :ts)"
                 ),
-                {"t": end_tx_id, "ts": datetime.utcnow()},
+                {"t": end_tx_id, "ts": naive_utcnow()},
             )
         db.session.execute(
             sa.text(

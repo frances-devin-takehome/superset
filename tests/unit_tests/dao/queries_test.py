@@ -22,6 +22,7 @@ from pytest_mock import MockerFixture
 from sqlalchemy.orm.session import Session
 
 from superset.exceptions import QueryNotFoundException, SupersetCancelQueryException
+from superset.utils.dates import naive_utcnow
 
 
 def test_query_dao_save_metadata(session: Session) -> None:
@@ -69,7 +70,7 @@ def test_query_dao_get_queries_changed_after(session: Session) -> None:
 
     database = Database(database_name="my_database", sqlalchemy_uri="sqlite://")
 
-    now = datetime.utcnow()
+    now = naive_utcnow()
 
     old_query_obj = Query(
         client_id="foo",
