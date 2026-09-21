@@ -14,7 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -27,6 +26,7 @@ from superset.commands.report.exceptions import ReportScheduleUnexpectedError
 from superset.commands.report.execute import AsyncExecuteReportScheduleCommand
 from superset.models.dashboard import Dashboard
 from superset.reports.models import ReportSourceFormat
+from superset.utils.dates import naive_utcnow
 from superset.utils.urls import get_url_path
 from tests.integration_tests.fixtures.tabbed_dashboard import (
     tabbed_dashboard,  # noqa: F401
@@ -60,7 +60,7 @@ def test_report_for_dashboard_with_tabs(
     ) as report_schedule:
         dashboard: Dashboard = report_schedule.dashboard
         AsyncExecuteReportScheduleCommand(
-            str(uuid4()), report_schedule.id, datetime.utcnow()
+            str(uuid4()), report_schedule.id, naive_utcnow()
         ).run()
         dashboard_state = report_schedule.extra.get("dashboard", {})
         permalink_key = CreateDashboardPermalinkCommand(
@@ -104,7 +104,7 @@ def test_report_with_header_data(
     ) as report_schedule:
         dashboard: Dashboard = report_schedule.dashboard
         AsyncExecuteReportScheduleCommand(
-            str(uuid4()), report_schedule.id, datetime.utcnow()
+            str(uuid4()), report_schedule.id, naive_utcnow()
         ).run()
         dashboard_state = report_schedule.extra.get("dashboard", {})
         permalink_key = CreateDashboardPermalinkCommand(
@@ -152,7 +152,7 @@ def test_report_schedule_stale_data_error_preserves_cause(
             # Execute the report and expect ReportScheduleUnexpectedError
             with pytest.raises(ReportScheduleUnexpectedError) as exc_info:
                 AsyncExecuteReportScheduleCommand(
-                    str(uuid4()), report_schedule.id, datetime.utcnow()
+                    str(uuid4()), report_schedule.id, naive_utcnow()
                 ).run()
 
             # Verify the original StaleDataError is preserved as the cause

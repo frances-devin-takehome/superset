@@ -44,6 +44,7 @@ from superset.tags.models import ObjectType, Tag, TaggedObject, TagType
 from superset.utils import json
 from superset.utils.core import get_example_default_schema
 from superset.utils.database import get_example_database
+from superset.utils.dates import naive_utcnow
 from tests.integration_tests.base_api_tests import ApiEditorsTestCaseMixin
 from tests.integration_tests.base_tests import (
     subjects_from_users,
@@ -1473,7 +1474,7 @@ class TestChartApi(ApiEditorsTestCaseMixin, InsertChartMixin, SupersetTestCase):
         `changed_on` timestamps are monotonically non-increasing. The original
         report shows the humanized column visually out of order, suggesting
         the sort key didn't actually reflect the timestamp."""
-        from datetime import datetime, timedelta
+        from datetime import timedelta
 
         admin = self.get_user("admin")
         # Insert two charts with distinct changed_on timestamps. Use raw UPDATE
@@ -1492,7 +1493,7 @@ class TestChartApi(ApiEditorsTestCaseMixin, InsertChartMixin, SupersetTestCase):
         # accidentally sorts by the humanized text instead of the column,
         # this test fails. (Pairs like "now"/"2 days ago" don't discriminate
         # because 'n' > '2' lexically agrees with newest-first.)
-        now = datetime.utcnow()
+        now = naive_utcnow()
         chart_older.changed_on = now - timedelta(hours=5)
         chart_newer.changed_on = now - timedelta(hours=3)
         db.session.commit()
